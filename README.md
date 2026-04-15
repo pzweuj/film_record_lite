@@ -1,4 +1,4 @@
-# FilmRecordLite
+# film_record_lite
 
 一个基于 SQLite 的轻量级观影记录 API 服务，可与 LLM 交互来管理你的电影记录。
 

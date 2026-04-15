@@ -3,7 +3,7 @@ name: film_record_lite
 description: User mentions movie/film viewing records, ratings, or asks about films they've watched
 ---
 
-# FilmRecordLite
+# film_record_lite
 
 A lightweight SQLite-based film record management REST API.
 
