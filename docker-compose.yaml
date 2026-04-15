@@ -1,0 +1,11 @@
+services:
+  film-record-lite:
+    image: ghcr.io/pzweuj/film_record_lite:latest
+    container_name: film-record-lite
+    ports:
+      - "8000:8000"
+    environment:
+      - FILM_RECORD_TOKEN=${FILM_RECORD_TOKEN:?FILM_RECORD_TOKEN is required}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

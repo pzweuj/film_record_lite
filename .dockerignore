@@ -1,0 +1,8 @@
+.claude/
+data/*.db
+__pycache__
+*.pyc
+.git
+.gitignore
+*.md
+!README.md
