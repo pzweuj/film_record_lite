@@ -55,7 +55,8 @@ Before each operation, read config. If missing, prompt user.
 | `POST` | `/films` | Add single film |
 | `POST` | `/films/batch` | Add multiple films |
 | `GET` | `/films?title=xxx` | Search by title |
-| `PUT` | `/films/rating` | Update rating |
+| `PUT` | `/films/{id}` | Update film by ID (all fields) |
+| `PUT` | `/films/rating` | Update rating by title |
 | `DELETE` | `/films/{id}` | Delete by ID |
 | `DELETE` | `/films?title=xxx` | Delete by title |
 | `GET` | `/films/by-actor?actor=xxx` | Search by actor |
@@ -105,6 +106,15 @@ curl "{server_url}/films?token={token}&title=无间道"
 curl -X PUT "{server_url}/films/rating?token={token}" \
   -H "Content-Type: application/json" \
   -d '{"title": "无间道", "rating": 10}'
+```
+
+### Update Film (All Fields)
+
+```bash
+# Update any field by film ID
+curl -X PUT "{server_url}/films/1?token={token}" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "无间道", "actors": "刘德华,梁朝伟,黄秋生,曾志伟", "review": "经典之作，剧情紧凑", "rating": 10}'
 ```
 
 ### List by Actor
@@ -181,6 +191,8 @@ JSON response includes both formatted text and raw data.
 7. **Chinese support**: All I/O in Chinese.
 
 8. **Rating scale**: 0-10. "满分" → 10, "9分" → 9.
+
+9. **Update film info**: Use `PUT /films/{id}` to update any field. First search to get film ID, then update. For rating-only updates, use `PUT /films/rating` with title (fuzzy match) for convenience.
 
 ## Error Responses
 
@@ -298,5 +310,32 @@ Response:
 {
   "message": "「梁朝伟」主演的电影 (1 部)",
   "films": ["**无间道**\n- 主演: 刘德华,梁朝伟,黄秋生\n- 评分: 10/10"]
+}
+```
+
+### Update Film Info
+
+```
+User: 把无间道的评价改成"经典港片，永不过时"
+
+Agent → GET /films?title=无间道 (先获取ID)
+Response: {"data": [{"id": 1, "title": "无间道", ...}]}
+
+Agent → PUT /films/1 {"review": "经典港片，永不过时"}
+
+Response:
+{
+  "message": "已更新电影信息",
+  "film": "**无间道**\n- 主演: 刘德华,梁朝伟,黄秋生\n- 评价: 经典港片，永不过时\n- 评分: 10/10"
+}
+
+User: 无间道的主演应该还有曾志伟
+
+Agent → PUT /films/1 {"actors": "刘德华,梁朝伟,黄秋生,曾志伟"}
+
+Response:
+{
+  "message": "已更新电影信息",
+  "film": "**无间道**\n- 主演: 刘德华,梁朝伟,黄秋生,曾志伟\n- 评分: 10/10"
 }
 ```

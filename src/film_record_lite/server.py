@@ -32,6 +32,15 @@ class RatingUpdate(BaseModel):
     rating: float = Field(..., ge=0, le=10)
 
 
+class FilmUpdate(BaseModel):
+    title: Optional[str] = Field(None, description="New film title")
+    actors: Optional[str] = Field(None, description="Main actors, comma-separated")
+    plot: Optional[str] = Field(None, description="Plot summary")
+    review: Optional[str] = Field(None, description="Personal review")
+    rating: Optional[float] = Field(None, ge=0, le=10, description="Rating 0-10")
+    record_date: Optional[str] = Field(None, description="Record date YYYY-MM-DD")
+
+
 class DeleteResponse(BaseModel):
     message: str
     deleted: bool = False
@@ -144,6 +153,29 @@ def create_app() -> FastAPI:
             "message": "已更新评分",
             "films": [format_film(f) for f in films],
             "data": [f.model_dump() for f in films]
+        }
+
+    @application.put("/films/{film_id}", summary="Update film by ID")
+    async def update_film(film_id: int, update: FilmUpdate, _: str = Depends(verify_token)):
+        """Update a film record by ID. Only provided fields will be updated."""
+        existing = db.get_film_by_id(film_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail=f"未找到 ID 为 {film_id} 的电影")
+
+        updated = db.update_film(
+            film_id=film_id,
+            title=update.title,
+            actors=update.actors,
+            plot=update.plot,
+            review=update.review,
+            rating=update.rating,
+            record_date=update.record_date,
+        )
+
+        return {
+            "message": "已更新电影信息",
+            "film": format_film(updated),
+            "data": updated.model_dump()
         }
 
     @application.delete("/films/{film_id}", summary="Delete film by ID")

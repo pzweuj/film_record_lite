@@ -109,6 +109,54 @@ class FilmDatabase:
             conn.commit()
         return self.get_film_by_title(title)
 
+    def update_film(
+        self,
+        film_id: int,
+        title: Optional[str] = None,
+        actors: Optional[str] = None,
+        plot: Optional[str] = None,
+        review: Optional[str] = None,
+        rating: Optional[float] = None,
+        record_date: Optional[str] = None,
+    ) -> Optional[FilmRecord]:
+        """Update a film record by ID. Only updates provided fields."""
+        updates = []
+        params = []
+
+        if title is not None:
+            updates.append("title = ?")
+            params.append(title)
+        if actors is not None:
+            updates.append("actors = ?")
+            params.append(actors)
+        if plot is not None:
+            updates.append("plot = ?")
+            params.append(plot)
+        if review is not None:
+            updates.append("review = ?")
+            params.append(review)
+        if rating is not None:
+            updates.append("rating = ?")
+            params.append(rating)
+        if record_date is not None:
+            updates.append("record_date = ?")
+            params.append(record_date)
+
+        if not updates:
+            return self.get_film_by_id(film_id)
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(film_id)
+
+        with self._get_connection() as conn:
+            conn.execute(
+                f"UPDATE films SET {', '.join(updates)} WHERE id = ?",
+                params,
+            )
+            conn.commit()
+
+        return self.get_film_by_id(film_id)
+
     def delete_film(self, film_id: int) -> bool:
         """Delete a film by ID. Returns True if deleted."""
         with self._get_connection() as conn:
