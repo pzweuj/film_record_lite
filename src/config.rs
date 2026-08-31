@@ -11,6 +11,10 @@ use clap::Parser;
     about = "FilmRecordLite Rust server"
 )]
 pub struct Cli {
+    /// Probe the local HTTP health endpoint and exit.
+    #[arg(long, hide = true)]
+    pub healthcheck: bool,
+
     /// Address to bind (the Python service defaults to 0.0.0.0).
     #[arg(long, default_value = "0.0.0.0")]
     pub host: String,

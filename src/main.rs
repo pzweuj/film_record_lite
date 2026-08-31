@@ -6,8 +6,11 @@ mod format;
 mod models;
 mod routes;
 
+use std::io::{Read, Write};
 use std::net::SocketAddr;
+use std::net::{TcpStream, ToSocketAddrs};
 use std::path::Path;
+use std::time::Duration;
 
 use axum::http::Request;
 use clap::Parser;
@@ -33,7 +36,13 @@ async fn main() {
 }
 
 async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let config = Config::from_cli(Cli::parse())?;
+    let cli = Cli::parse();
+    if cli.healthcheck {
+        probe_health(cli.port)?;
+        return Ok(());
+    }
+
+    let config = Config::from_cli(cli)?;
     create_parent_directory(&config.db_path)?;
 
     let db = FilmDatabase::connect(&config.db_path).await?;
@@ -69,6 +78,30 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
+}
+
+fn probe_health(port: u16) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let timeout = Duration::from_secs(2);
+    let address = ("127.0.0.1", port)
+        .to_socket_addrs()?
+        .next()
+        .ok_or("healthcheck address could not be resolved")?;
+    let mut stream = TcpStream::connect_timeout(&address, timeout)?;
+    stream.set_read_timeout(Some(timeout))?;
+    stream.set_write_timeout(Some(timeout))?;
+    stream.write_all(b"GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")?;
+
+    let mut response = [0_u8; 64];
+    let bytes_read = stream.read(&mut response)?;
+    let status_line = std::str::from_utf8(&response[..bytes_read])?
+        .lines()
+        .next()
+        .unwrap_or_default();
+    if status_line.contains(" 200 ") {
+        Ok(())
+    } else {
+        Err(format!("healthcheck failed: {status_line}").into())
+    }
 }
 
 fn create_parent_directory(path: &Path) -> Result<(), std::io::Error> {
