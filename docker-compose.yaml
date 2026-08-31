@@ -8,4 +8,11 @@ services:
       - FILM_RECORD_TOKEN=${FILM_RECORD_TOKEN:?FILM_RECORD_TOKEN is required}
     volumes:
       - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    stop_grace_period: 10s
     restart: unless-stopped

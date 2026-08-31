@@ -1,6 +1,6 @@
 # film_record_lite
 
-一个基于 SQLite 的轻量级观影记录 API 服务，可与 LLM 交互来管理你的电影记录。
+一个使用 Rust 和 SQLite 实现的轻量级观影记录 API 服务，可与 LLM 交互来管理你的电影记录。
 
 ## 服务端安装
 
@@ -16,11 +16,19 @@ docker compose up -d
 
 数据通过 volume 挂载到 `./data` 目录持久化。
 
-### 本地安装
+### 本地运行
 
 ```bash
-pip install -e .
-FILM_RECORD_TOKEN=your_token python -m film_record_lite.server --port 8000
+FILM_RECORD_TOKEN=your_token cargo run --release -- --port 8000
+```
+
+服务会直接使用 `data/films.db`。从旧版本升级时不需要迁移数据库、更换 Token 或修改客户端调用。
+
+也可以先编译为单一可执行文件：
+
+```bash
+cargo build --release --locked
+FILM_RECORD_TOKEN=your_token ./target/release/film-record-lite --port 8000
 ```
 
 启动后访问 Swagger 文档：`http://localhost:8000/docs`

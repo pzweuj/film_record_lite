@@ -1,8 +1,9 @@
+.git/
+.github/
 .claude/
+.env
+target/
 data/*.db
-__pycache__
-*.pyc
-.git
-.gitignore
+data/*.db-shm
+data/*.db-wal
 *.md
-!README.md
